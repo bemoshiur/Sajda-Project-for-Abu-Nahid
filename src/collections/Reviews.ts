@@ -20,7 +20,12 @@ export const Reviews: CollectionConfig = {
   },
   fields: [
     { name: 'authorName', type: 'text', required: true },
-    { name: 'customer', type: 'relationship', relationTo: 'customers' },
+    {
+      name: 'customer',
+      type: 'relationship',
+      relationTo: 'customers',
+      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+    },
     { name: 'rating', type: 'number', required: true, min: 1, max: 5 },
     { name: 'title', type: 'text' },
     { name: 'body', type: 'textarea', required: true },
@@ -39,7 +44,12 @@ export const Reviews: CollectionConfig = {
         { label: 'Rejected', value: 'rejected' },
       ],
     },
-    { name: 'featured', type: 'checkbox', defaultValue: false },
+    {
+      name: 'featured',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+    },
   ],
   timestamps: true,
 }

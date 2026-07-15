@@ -1,5 +1,8 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, isAdmin, isStaff } from '../access'
+import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access'
+
+/** Staff-writable-only fields (public submitters get the defaults). */
+const staffOnlyField = { create: isStaffFieldLevel, update: isStaffFieldLevel }
 
 /**
  * Enquiries / leads (the admin "Call List"). Created by public forms
@@ -36,12 +39,13 @@ export const Enquiries: CollectionConfig = {
     { name: 'travelMonth', type: 'text' },
     { name: 'travelers', type: 'number', min: 1 },
     { name: 'message', type: 'textarea' },
-    { name: 'callNote', type: 'textarea', admin: { description: 'Internal staff note.' } },
+    { name: 'callNote', type: 'textarea', access: staffOnlyField, admin: { description: 'Internal staff note.' } },
     {
       name: 'status',
       type: 'select',
       required: true,
       defaultValue: 'new',
+      access: staffOnlyField,
       options: [
         { label: 'New', value: 'new' },
         { label: 'Contacted', value: 'contacted' },
@@ -50,7 +54,7 @@ export const Enquiries: CollectionConfig = {
         { label: 'Cancelled / Not Interested', value: 'cancelled' },
       ],
     },
-    { name: 'assignedTo', type: 'relationship', relationTo: 'users' },
+    { name: 'assignedTo', type: 'relationship', relationTo: 'users', access: staffOnlyField },
     {
       name: 'source',
       type: 'select',

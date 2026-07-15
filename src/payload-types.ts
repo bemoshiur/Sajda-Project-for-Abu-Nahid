@@ -80,6 +80,7 @@ export interface Config {
     reviews: Review;
     posts: Post;
     media: Media;
+    'private-media': PrivateMedia;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -99,6 +100,7 @@ export interface Config {
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'private-media': PrivateMediaSelect<false> | PrivateMediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -389,11 +391,11 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'paid' | 'cancelled' | 'completed' | 'refunded';
   paymentStatus: 'unpaid' | 'paid' | 'partial' | 'refunded';
   /**
-   * Uploaded passport copies (restricted).
+   * Uploaded passport copies (staff/owner-only via private-media).
    */
   passportCopies?:
     | {
-        file?: (number | null) | Media;
+        file?: (number | null) | PrivateMedia;
         id?: string | null;
       }[]
     | null;
@@ -401,6 +403,26 @@ export interface Booking {
   source?: ('web' | 'admin') | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-media".
+ */
+export interface PrivateMedia {
+  id: number;
+  owner?: (number | null) | Customer;
+  alt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -648,6 +670,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'private-media';
+        value: number | PrivateMedia;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1039,6 +1065,25 @@ export interface PostsSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-media_select".
+ */
+export interface PrivateMediaSelect<T extends boolean = true> {
+  owner?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;

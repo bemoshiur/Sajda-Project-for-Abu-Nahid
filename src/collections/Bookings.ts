@@ -1,10 +1,18 @@
 import type { CollectionConfig } from 'payload'
-import { authenticated, isAdmin, isStaff, isStaffOrOwnedByCustomer } from '../access'
+import { authenticated, isAdmin, isStaff, isStaffFieldLevel, isStaffOrOwnedByCustomer } from '../access'
 import { generateBookingNumber } from '../lib/numbering'
+
+/** Field-level access shared by all money/state fields — staff-writable only. */
+const staffOnlyField = { create: isStaffFieldLevel, update: isStaffFieldLevel }
 
 /**
  * Bookings (the admin "Orders"). A customer books a package/departure;
  * payment + invoice are handled in Phase 5. Customers see only their own.
+ *
+ * Security: money + status fields are staff-writable only (a customer cannot
+ * self-declare `total: 0` or `status: 'paid'`). The real booking flow creates
+ * rows via the Local API (Phase 5), which recomputes totals server-side. On
+ * customer create, `customer` is forced to the authenticated customer's id.
  */
 export const Bookings: CollectionConfig = {
   slug: 'bookings',
@@ -21,9 +29,15 @@ export const Bookings: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data, operation }) => {
-        if (operation === 'create' && !data.bookingNumber) {
-          data.bookingNumber = generateBookingNumber()
+      ({ data, operation, req }) => {
+        if (operation === 'create') {
+          if (!data.bookingNumber) data.bookingNumber = generateBookingNumber()
+          const user = req.user as { collection?: string; id?: string | number } | null
+          // A customer may only ever book for themselves.
+          if (user?.collection === 'customers' && user.id != null) {
+            data.customer = user.id
+            data.source = 'web'
+          }
         }
         return data
       },
@@ -59,15 +73,16 @@ export const Bookings: CollectionConfig = {
       ],
     },
     { name: 'travelersCount', type: 'number', min: 1, defaultValue: 1 },
-    { name: 'subtotal', type: 'number', min: 0 },
-    { name: 'discount', type: 'number', min: 0, defaultValue: 0 },
-    { name: 'total', type: 'number', min: 0 },
-    { name: 'currency', type: 'text', defaultValue: 'BDT' },
+    { name: 'subtotal', type: 'number', min: 0, access: staffOnlyField },
+    { name: 'discount', type: 'number', min: 0, defaultValue: 0, access: staffOnlyField },
+    { name: 'total', type: 'number', min: 0, access: staffOnlyField },
+    { name: 'currency', type: 'text', defaultValue: 'BDT', access: staffOnlyField },
     {
       name: 'status',
       type: 'select',
       required: true,
       defaultValue: 'pending',
+      access: staffOnlyField,
       options: [
         { label: 'Pending', value: 'pending' },
         { label: 'Confirmed', value: 'confirmed' },
@@ -82,6 +97,7 @@ export const Bookings: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'unpaid',
+      access: staffOnlyField,
       options: [
         { label: 'Unpaid', value: 'unpaid' },
         { label: 'Paid', value: 'paid' },
@@ -92,14 +108,15 @@ export const Bookings: CollectionConfig = {
     {
       name: 'passportCopies',
       type: 'array',
-      admin: { description: 'Uploaded passport copies (restricted).' },
-      fields: [{ name: 'file', type: 'upload', relationTo: 'media' }],
+      admin: { description: 'Uploaded passport copies (staff/owner-only via private-media).' },
+      fields: [{ name: 'file', type: 'upload', relationTo: 'private-media' }],
     },
     { name: 'notes', type: 'textarea' },
     {
       name: 'source',
       type: 'select',
       defaultValue: 'web',
+      access: staffOnlyField,
       options: [
         { label: 'Web', value: 'web' },
         { label: 'Admin', value: 'admin' },

@@ -18,6 +18,7 @@ import { Enquiries } from './collections/Enquiries'
 import { Suppliers } from './collections/Suppliers'
 import { Reviews } from './collections/Reviews'
 import { Posts } from './collections/Posts'
+import { PrivateMedia } from './collections/PrivateMedia'
 import { Settings } from './globals/Settings'
 
 const filename = fileURLToPath(import.meta.url)
@@ -58,6 +59,7 @@ export default buildConfig({
     Reviews,
     Posts,
     Media,
+    PrivateMedia,
   ],
   globals: [Settings],
   editor: lexicalEditor(),
