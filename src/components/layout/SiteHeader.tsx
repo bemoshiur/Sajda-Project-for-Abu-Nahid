@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Menu, X, User } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
@@ -22,9 +21,7 @@ const NAV = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const pathname = usePathname()
 
-  useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
     onScroll()
@@ -80,6 +77,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setOpen(false)}
                 className="rounded-lg px-3 py-2.5 font-sans text-sm font-medium text-ink/80 hover:bg-surface-2"
               >
                 {item.label}
