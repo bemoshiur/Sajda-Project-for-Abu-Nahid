@@ -51,3 +51,6 @@ next-env.d.ts
 # playwright / screenshots
 .playwright-mcp/
 *.jpeg
+
+# demo-account seed (contains plaintext demo passwords — keep out of public repo)
+src/payload/seed/demo.ts
