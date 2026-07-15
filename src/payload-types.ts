@@ -64,10 +64,21 @@ export type SupportedTimezones =
 export interface Config {
   auth: {
     users: UserAuthOperations;
+    customers: CustomerAuthOperations;
   };
   blocks: {};
   collections: {
     users: User;
+    customers: Customer;
+    packages: Package;
+    departures: Departure;
+    bookings: Booking;
+    payments: Payment;
+    invoices: Invoice;
+    enquiries: Enquiry;
+    suppliers: Supplier;
+    reviews: Review;
+    posts: Post;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -77,6 +88,16 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
+    packages: PackagesSelect<false> | PackagesSelect<true>;
+    departures: DeparturesSelect<false> | DeparturesSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -87,19 +108,41 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    settings: Setting;
+  };
+  globalsSelect: {
+    settings: SettingsSelect<false> | SettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: User | Customer;
   jobs: {
     tasks: unknown;
     workflows: unknown;
   };
 }
 export interface UserAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
+export interface CustomerAuthOperations {
   forgotPassword: {
     email: string;
     password: string;
@@ -148,6 +191,43 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  name: string;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  avatar?: (number | null) | Media;
+  address?: {
+    line1?: string | null;
+    city?: string | null;
+    country?: string | null;
+    postcode?: string | null;
+  };
+  passportNumber?: string | null;
+  passportExpiry?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
@@ -164,6 +244,338 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: number;
+  title: string;
+  /**
+   * URL identifier — auto-generated from the title if left blank.
+   */
+  slug?: string | null;
+  category: 'tour' | 'hajj' | 'umrah';
+  status: 'draft' | 'published';
+  featured?: boolean | null;
+  shortDescription?: string | null;
+  heroImage?: (number | null) | Media;
+  gallery?:
+    | {
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Price in BDT (৳).
+   */
+  basePrice: number;
+  duration?: {
+    days?: number | null;
+    nights?: number | null;
+  };
+  destination?: string | null;
+  startLocation?: string | null;
+  overview?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  info?: {
+    hotelInfo?: string | null;
+    flightInfo?: string | null;
+    foodInfo?: string | null;
+    transportInfo?: string | null;
+  };
+  included?:
+    | {
+        item?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  excluded?:
+    | {
+        item?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  itinerary?:
+    | {
+        day?: number | null;
+        title?: string | null;
+        description?: string | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  highlights?:
+    | {
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  tags?:
+    | {
+        tag?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Derived from approved reviews.
+   */
+  ratingAvg?: number | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "departures".
+ */
+export interface Departure {
+  id: number;
+  package: number | Package;
+  departureDate: string;
+  returnDate?: string | null;
+  /**
+   * Price in BDT (৳).
+   */
+  price: number;
+  seatsTotal: number;
+  seatsBooked?: number | null;
+  seatsAvailable?: number | null;
+  status: 'open' | 'full' | 'closed' | 'cancelled';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  bookingNumber?: string | null;
+  customer: number | Customer;
+  package: number | Package;
+  departure?: (number | null) | Departure;
+  travelers?:
+    | {
+        name?: string | null;
+        passportNumber?: string | null;
+        type?: ('adult' | 'child' | 'infant') | null;
+        id?: string | null;
+      }[]
+    | null;
+  travelersCount?: number | null;
+  subtotal?: number | null;
+  discount?: number | null;
+  total?: number | null;
+  currency?: string | null;
+  status: 'pending' | 'confirmed' | 'paid' | 'cancelled' | 'completed' | 'refunded';
+  paymentStatus: 'unpaid' | 'paid' | 'partial' | 'refunded';
+  /**
+   * Uploaded passport copies (restricted).
+   */
+  passportCopies?:
+    | {
+        file?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  notes?: string | null;
+  source?: ('web' | 'admin') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments".
+ */
+export interface Payment {
+  id: number;
+  booking: number | Booking;
+  amount: number;
+  currency?: string | null;
+  provider?: 'stripe' | null;
+  stripeSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
+  status: 'created' | 'succeeded' | 'failed' | 'refunded';
+  receiptUrl?: string | null;
+  paidAt?: string | null;
+  raw?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  invoiceNumber?: string | null;
+  booking?: (number | null) | Booking;
+  customer: number | Customer;
+  lineItems?:
+    | {
+        description?: string | null;
+        qty?: number | null;
+        unitPrice?: number | null;
+        total?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  discount?: number | null;
+  tax?: number | null;
+  total?: number | null;
+  currency?: string | null;
+  issueDate?: string | null;
+  dueDate?: string | null;
+  status: 'draft' | 'sent' | 'paid' | 'void';
+  pdfUrl?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string | null;
+  package?: (number | null) | Package;
+  interestedCategory?: ('tour' | 'hajj' | 'umrah' | 'other') | null;
+  travelMonth?: string | null;
+  travelers?: number | null;
+  message?: string | null;
+  /**
+   * Internal staff note.
+   */
+  callNote?: string | null;
+  status: 'new' | 'contacted' | 'interested' | 'confirmed' | 'cancelled';
+  assignedTo?: (number | null) | User;
+  source?: ('hero_widget' | 'contact_form' | 'package_page') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers".
+ */
+export interface Supplier {
+  id: number;
+  name: string;
+  type: 'hotel' | 'airline' | 'transport' | 'visa' | 'other';
+  contactPerson?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  services?:
+    | {
+        service?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  rating?: number | null;
+  status: 'active' | 'inactive';
+  linkedPackages?: (number | Package)[] | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  authorName: string;
+  customer?: (number | null) | Customer;
+  rating: number;
+  title?: string | null;
+  body: string;
+  image?: (number | null) | Media;
+  package?: (number | null) | Package;
+  status: 'pending' | 'approved' | 'rejected';
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * URL identifier — auto-generated from the title if left blank.
+   */
+  slug?: string | null;
+  excerpt?: string | null;
+  coverImage?: (number | null) | Media;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  author?: string | null;
+  category?: string | null;
+  tags?:
+    | {
+        tag?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  publishedAt?: string | null;
+  status: 'draft' | 'published';
+  /**
+   * Estimated read time (minutes).
+   */
+  readTime?: number | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -194,14 +606,59 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'packages';
+        value: number | Package;
+      } | null)
+    | ({
+        relationTo: 'departures';
+        value: number | Departure;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'payments';
+        value: number | Payment;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'suppliers';
+        value: number | Supplier;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -211,10 +668,15 @@ export interface PayloadLockedDocument {
  */
 export interface PayloadPreference {
   id: number;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   key?: string | null;
   value?:
     | {
@@ -264,6 +726,313 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  dateOfBirth?: T;
+  avatar?: T;
+  address?:
+    | T
+    | {
+        line1?: T;
+        city?: T;
+        country?: T;
+        postcode?: T;
+      };
+  passportNumber?: T;
+  passportExpiry?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages_select".
+ */
+export interface PackagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  status?: T;
+  featured?: T;
+  shortDescription?: T;
+  heroImage?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  basePrice?: T;
+  duration?:
+    | T
+    | {
+        days?: T;
+        nights?: T;
+      };
+  destination?: T;
+  startLocation?: T;
+  overview?: T;
+  info?:
+    | T
+    | {
+        hotelInfo?: T;
+        flightInfo?: T;
+        foodInfo?: T;
+        transportInfo?: T;
+      };
+  included?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  excluded?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  itinerary?:
+    | T
+    | {
+        day?: T;
+        title?: T;
+        description?: T;
+        image?: T;
+        id?: T;
+      };
+  highlights?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  ratingAvg?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "departures_select".
+ */
+export interface DeparturesSelect<T extends boolean = true> {
+  package?: T;
+  departureDate?: T;
+  returnDate?: T;
+  price?: T;
+  seatsTotal?: T;
+  seatsBooked?: T;
+  seatsAvailable?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  bookingNumber?: T;
+  customer?: T;
+  package?: T;
+  departure?: T;
+  travelers?:
+    | T
+    | {
+        name?: T;
+        passportNumber?: T;
+        type?: T;
+        id?: T;
+      };
+  travelersCount?: T;
+  subtotal?: T;
+  discount?: T;
+  total?: T;
+  currency?: T;
+  status?: T;
+  paymentStatus?: T;
+  passportCopies?:
+    | T
+    | {
+        file?: T;
+        id?: T;
+      };
+  notes?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments_select".
+ */
+export interface PaymentsSelect<T extends boolean = true> {
+  booking?: T;
+  amount?: T;
+  currency?: T;
+  provider?: T;
+  stripeSessionId?: T;
+  stripePaymentIntentId?: T;
+  status?: T;
+  receiptUrl?: T;
+  paidAt?: T;
+  raw?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  invoiceNumber?: T;
+  booking?: T;
+  customer?: T;
+  lineItems?:
+    | T
+    | {
+        description?: T;
+        qty?: T;
+        unitPrice?: T;
+        total?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  discount?: T;
+  tax?: T;
+  total?: T;
+  currency?: T;
+  issueDate?: T;
+  dueDate?: T;
+  status?: T;
+  pdfUrl?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  package?: T;
+  interestedCategory?: T;
+  travelMonth?: T;
+  travelers?: T;
+  message?: T;
+  callNote?: T;
+  status?: T;
+  assignedTo?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers_select".
+ */
+export interface SuppliersSelect<T extends boolean = true> {
+  name?: T;
+  type?: T;
+  contactPerson?: T;
+  phone?: T;
+  email?: T;
+  address?: T;
+  services?:
+    | T
+    | {
+        service?: T;
+        id?: T;
+      };
+  rating?: T;
+  status?: T;
+  linkedPackages?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  authorName?: T;
+  customer?: T;
+  rating?: T;
+  title?: T;
+  body?: T;
+  image?: T;
+  package?: T;
+  status?: T;
+  featured?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  coverImage?: T;
+  body?: T;
+  author?: T;
+  category?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  publishedAt?: T;
+  status?: T;
+  readTime?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -322,6 +1091,116 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings".
+ */
+export interface Setting {
+  id: number;
+  companyName?: string | null;
+  tagline?: string | null;
+  logo?: (number | null) | Media;
+  favicon?: (number | null) | Media;
+  address?: string | null;
+  businessHours?: string | null;
+  heroStats?: {
+    clientsCount?: number | null;
+    clientsLabel?: string | null;
+  };
+  phones?:
+    | {
+        phone?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  emails?:
+    | {
+        email?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  whatsapp?: string | null;
+  /**
+   * Google Maps embed URL.
+   */
+  googleMapEmbed?: string | null;
+  socialLinks?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
+    twitter?: string | null;
+    linkedin?: string | null;
+  };
+  invoicePrefix?: string | null;
+  invoiceFooterNote?: string | null;
+  baseCurrency?: string | null;
+  /**
+   * 1 USD = how many BDT (used for currency localization).
+   */
+  usdRate?: number | null;
+  seoDefaults?: {
+    title?: string | null;
+    description?: string | null;
+    image?: (number | null) | Media;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings_select".
+ */
+export interface SettingsSelect<T extends boolean = true> {
+  companyName?: T;
+  tagline?: T;
+  logo?: T;
+  favicon?: T;
+  address?: T;
+  businessHours?: T;
+  heroStats?:
+    | T
+    | {
+        clientsCount?: T;
+        clientsLabel?: T;
+      };
+  phones?:
+    | T
+    | {
+        phone?: T;
+        id?: T;
+      };
+  emails?:
+    | T
+    | {
+        email?: T;
+        id?: T;
+      };
+  whatsapp?: T;
+  googleMapEmbed?: T;
+  socialLinks?:
+    | T
+    | {
+        facebook?: T;
+        instagram?: T;
+        youtube?: T;
+        twitter?: T;
+        linkedin?: T;
+      };
+  invoicePrefix?: T;
+  invoiceFooterNote?: T;
+  baseCurrency?: T;
+  usdRate?: T;
+  seoDefaults?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

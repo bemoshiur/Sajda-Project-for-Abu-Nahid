@@ -1,9 +1,17 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAdminFieldLevel, isStaff, isStaffOrSelf, isSuperAdmin } from '../access'
 
 /**
  * Staff / admin authentication collection.
  * Backs the custom admin login and the Users & Roles screen.
- * (End-user customers live in a separate `customers` collection — added in Phase 1.)
+ * (End-user customers live in a separate `customers` collection.)
+ *
+ * Access model:
+ *  - read:   any staff
+ *  - create: admin+ (seed uses Local API, which bypasses access for first user)
+ *  - update: self or admin+ — but `role`/`isActive` are field-locked to admin+,
+ *            so a staff/manager can never escalate their own privileges
+ *  - delete: super-admin only
  */
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -13,6 +21,12 @@ export const Users: CollectionConfig = {
     group: 'Staff',
   },
   auth: true,
+  access: {
+    read: isStaff,
+    create: isAdmin,
+    update: isStaffOrSelf,
+    delete: isSuperAdmin,
+  },
   fields: [
     {
       name: 'name',
@@ -23,6 +37,10 @@ export const Users: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'staff',
+      access: {
+        create: isAdminFieldLevel,
+        update: isAdminFieldLevel,
+      },
       options: [
         { label: 'Super Admin', value: 'superadmin' },
         { label: 'Admin', value: 'admin' },
@@ -38,6 +56,10 @@ export const Users: CollectionConfig = {
       name: 'isActive',
       type: 'checkbox',
       defaultValue: true,
+      access: {
+        create: isAdminFieldLevel,
+        update: isAdminFieldLevel,
+      },
     },
   ],
   versions: false,
