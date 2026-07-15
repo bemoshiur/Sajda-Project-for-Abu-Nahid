@@ -74,8 +74,30 @@ export async function registerCustomer(_prev: AuthState, formData: FormData): Pr
   redirect('/dashboard')
 }
 
+export async function loginStaff(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = loginSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) return { error: 'Enter a valid email and password.' }
+
+  const payload = await getPayload({ config: await config })
+  try {
+    const res = await payload.login({ collection: 'users', data: parsed.data })
+    if (!res.token) return { error: 'Invalid email or password.' }
+    if (res.user && res.user.isActive === false) return { error: 'This staff account is disabled.' }
+    await setAuthCookie(res.token, res.exp)
+  } catch {
+    return { error: 'Invalid email or password.' }
+  }
+  redirect('/admin')
+}
+
 export async function logout() {
   const c = await cookies()
   c.delete(COOKIE)
   redirect('/')
+}
+
+export async function logoutStaff() {
+  const c = await cookies()
+  c.delete(COOKIE)
+  redirect('/admin/login')
 }

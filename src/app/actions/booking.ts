@@ -40,11 +40,18 @@ export async function createBookingAndCheckout(
   let unitPrice = pkg.basePrice
   let departureRef: number | undefined
   if (departureId) {
-    const dep = await payload.findByID({ collection: 'departures', id: departureId }).catch(() => null)
-    if (dep) {
-      unitPrice = dep.price
-      departureRef = typeof dep.id === 'number' ? dep.id : Number(dep.id)
+    const dep = await payload.findByID({ collection: 'departures', id: departureId, depth: 0 }).catch(() => null)
+    const depPkgId =
+      dep && typeof dep.package === 'object' && dep.package
+        ? Number((dep.package as { id: number }).id)
+        : Number(dep?.package)
+    // Fail closed: the departure must belong to this package and be open,
+    // so a mismatched departureId can never be used to manipulate the price.
+    if (!dep || depPkgId !== Number(pkg.id) || dep.status !== 'open') {
+      return { error: 'The selected departure is not available for this package.' }
     }
+    unitPrice = dep.price
+    departureRef = Number(dep.id)
   }
   const total = unitPrice * travelersCount
 

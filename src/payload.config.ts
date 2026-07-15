@@ -37,6 +37,10 @@ if (!databaseUrl) {
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN
 
 export default buildConfig({
+  // Payload's built-in admin lives at /cms; the custom-designed admin owns /admin.
+  routes: {
+    admin: '/cms',
+  },
   admin: {
     user: Users.slug,
     importMap: {
