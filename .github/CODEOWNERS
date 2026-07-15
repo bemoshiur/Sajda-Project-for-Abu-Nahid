@@ -1,0 +1,11 @@
+# Default owner for everything in the repo.
+# These owners are requested for review on every pull request.
+* @bemoshiur
+
+# Backend / data model
+/src/collections/    @bemoshiur
+/src/access/         @bemoshiur
+/src/payload.config.ts @bemoshiur
+
+# CI / infrastructure
+/.github/            @bemoshiur
