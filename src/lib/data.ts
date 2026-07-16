@@ -31,6 +31,34 @@ export async function getPackages(opts?: {
   return res.docs
 }
 
+export type PackageWithNextDate = { pkg: Package; nextDate: string | null }
+
+/** Published packages plus each one's earliest upcoming (open) departure date. */
+export async function getPackagesWithNextDeparture(opts?: {
+  category?: string
+}): Promise<PackageWithNextDate[]> {
+  const payload = await payloadClient()
+  const packages = await getPackages({ category: opts?.category, limit: 100 })
+  if (!packages.length) return []
+
+  const ids = packages.map((p) => p.id)
+  const deps = await payload.find({
+    collection: 'departures',
+    where: { package: { in: ids }, status: { equals: 'open' } },
+    sort: 'departureDate',
+    limit: 500,
+    depth: 0,
+  })
+
+  const nextByPkg = new Map<number, string>()
+  for (const d of deps.docs) {
+    const pid = typeof d.package === 'object' && d.package ? Number((d.package as { id: number }).id) : Number(d.package)
+    if (!nextByPkg.has(pid) && d.departureDate) nextByPkg.set(pid, d.departureDate)
+  }
+
+  return packages.map((pkg) => ({ pkg, nextDate: nextByPkg.get(Number(pkg.id)) ?? null }))
+}
+
 export async function getPackageBySlug(slug: string): Promise<Package | null> {
   const payload = await payloadClient()
   const res = await payload.find({

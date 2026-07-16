@@ -6,6 +6,7 @@ import { Menu, X, User } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
+import { CurrencyToggle } from '@/components/currency/CurrencyToggle'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -52,6 +53,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <CurrencyToggle />
           <Button href="/login" variant="ghost" size="sm">
             <User className="h-4 w-4" /> Sign in
           </Button>
@@ -83,6 +85,10 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            <div className="mt-3 flex items-center justify-between">
+              <span className="font-ui text-xs font-medium text-muted-2">Currency</span>
+              <CurrencyToggle />
+            </div>
             <div className="mt-2 flex gap-2">
               <Button href="/login" variant="outline" size="sm" className="flex-1">
                 Sign in

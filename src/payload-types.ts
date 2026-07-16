@@ -261,6 +261,28 @@ export interface Package {
   category: 'tour' | 'hajj' | 'umrah';
   status: 'draft' | 'published';
   featured?: boolean | null;
+  /**
+   * Ribbon shown on the package card.
+   */
+  badge?: ('none' | 'top_package' | 'best_seller' | 'popular') | null;
+  /**
+   * Service tier — drives the Economy/Standard/Premium filter.
+   */
+  tier?: ('economy' | 'standard' | 'premium') | null;
+  /**
+   * Number of reviews shown beside the rating.
+   */
+  ratingCount?: number | null;
+  /**
+   * Key/value spec rows shown on the package card (up to 4).
+   */
+  specs?:
+    | {
+        label?: string | null;
+        value?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   shortDescription?: string | null;
   heroImage?: (number | null) | Media;
   gallery?:
@@ -799,6 +821,16 @@ export interface PackagesSelect<T extends boolean = true> {
   category?: T;
   status?: T;
   featured?: T;
+  badge?: T;
+  tier?: T;
+  ratingCount?: T;
+  specs?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        id?: T;
+      };
   shortDescription?: T;
   heroImage?: T;
   gallery?:
