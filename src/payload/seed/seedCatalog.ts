@@ -1,11 +1,17 @@
 import type { Payload } from 'payload'
 import { richText, daysFromNow } from './lib'
 
+type Spec = { label: string; value: string }
+
 type SeedPackage = {
   title: string
   slug: string
   category: 'tour' | 'hajj' | 'umrah'
   featured?: boolean
+  badge: 'none' | 'top_package' | 'best_seller' | 'popular'
+  tier: 'economy' | 'standard' | 'premium'
+  ratingCount: number
+  specs: Spec[]
   shortDescription: string
   basePrice: number
   days: number
@@ -28,6 +34,15 @@ const PACKAGES: SeedPackage[] = [
     slug: 'special-umrah-package',
     category: 'umrah',
     featured: true,
+    badge: 'best_seller',
+    tier: 'standard',
+    ratingCount: 48,
+    specs: [
+      { label: 'Makkah Hotel', value: '4★ · 250m from Haram' },
+      { label: 'Madinah Hotel', value: '4★ · 300m' },
+      { label: 'Room Sharing', value: 'Quad Sharing' },
+      { label: 'Distance to Haram', value: '250m' },
+    ],
     shortDescription:
       'A peaceful, well-organized Umrah journey with visa, flights, hotel, transport and expert guidance.',
     basePrice: 165000,
@@ -60,6 +75,15 @@ const PACKAGES: SeedPackage[] = [
     title: 'Premium Umrah — Family',
     slug: 'premium-umrah-family',
     category: 'umrah',
+    badge: 'popular',
+    tier: 'premium',
+    ratingCount: 32,
+    specs: [
+      { label: 'Makkah Hotel', value: '5★ · Haram View' },
+      { label: 'Madinah Hotel', value: '5★ · 150m' },
+      { label: 'Room Sharing', value: 'Double Sharing' },
+      { label: 'Distance to Haram', value: 'Haram-facing' },
+    ],
     shortDescription: 'Year-round Umrah for families with premium 5-star stays and full support.',
     basePrice: 245000,
     days: 12,
@@ -91,6 +115,15 @@ const PACKAGES: SeedPackage[] = [
     slug: 'hajj-sacred-fifth-pillar',
     category: 'hajj',
     featured: true,
+    badge: 'top_package',
+    tier: 'premium',
+    ratingCount: 27,
+    specs: [
+      { label: 'Makkah Hotel', value: '5★ · 300m from Haram' },
+      { label: 'Madinah Hotel', value: '5★ · 200m' },
+      { label: 'Room Sharing', value: 'Triple Sharing' },
+      { label: 'Mina & Arafah', value: 'Upgraded tents' },
+    ],
     shortDescription:
       'Complete Hajj arrangements with premium accommodation, guided rituals, and dedicated support.',
     basePrice: 725000,
@@ -120,6 +153,15 @@ const PACKAGES: SeedPackage[] = [
     slug: 'explore-bangladesh-sundarbans',
     category: 'tour',
     featured: true,
+    badge: 'best_seller',
+    tier: 'standard',
+    ratingCount: 64,
+    specs: [
+      { label: 'Hotel Class', value: 'Deluxe Cabin' },
+      { label: 'Transport', value: 'AC Coach + Boat' },
+      { label: 'Meals', value: 'All included' },
+      { label: 'Guide', value: 'Licensed guide' },
+    ],
     shortDescription:
       "Curated travel across Bangladesh's most breathtaking destinations — mangroves, hills, sea and more.",
     basePrice: 28000,
@@ -149,6 +191,15 @@ const PACKAGES: SeedPackage[] = [
     title: 'Premium Europe Sightseeing Tour',
     slug: 'premium-europe-sightseeing',
     category: 'tour',
+    badge: 'popular',
+    tier: 'premium',
+    ratingCount: 21,
+    specs: [
+      { label: 'Hotel Class', value: '4★ Central' },
+      { label: 'Flight Type', value: 'Economy' },
+      { label: 'Visa Support', value: 'Schengen assist' },
+      { label: 'Transport', value: 'Private coach' },
+    ],
     shortDescription:
       'Discover the beauty of Europe with carefully planned sightseeing across famous landmarks and scenic cities.',
     basePrice: 360000,
@@ -177,6 +228,15 @@ const PACKAGES: SeedPackage[] = [
     title: 'Umrah Economy — 10 Days',
     slug: 'umrah-economy-10-days',
     category: 'umrah',
+    badge: 'none',
+    tier: 'economy',
+    ratingCount: 39,
+    specs: [
+      { label: 'Makkah Hotel', value: '3★ · 700m from Haram' },
+      { label: 'Madinah Hotel', value: '3★ · 600m' },
+      { label: 'Room Sharing', value: 'Quad Sharing' },
+      { label: 'Distance to Haram', value: '700m' },
+    ],
     shortDescription: 'An affordable, comfortable Umrah for a peaceful short journey.',
     basePrice: 129000,
     days: 10,
@@ -205,55 +265,68 @@ const PACKAGES: SeedPackage[] = [
   },
 ]
 
+/** Idempotent: upserts each package by slug (updating new fields) and seeds departures once. */
 export async function seedCatalog(payload: Payload): Promise<void> {
-  const existing = await payload.count({ collection: 'packages' })
-  if (existing.totalDocs > 0) {
-    payload.logger.info(`✔ Packages already seeded (${existing.totalDocs})`)
-    return
-  }
-
   for (const p of PACKAGES) {
-    const created = await payload.create({
+    const data = {
+      title: p.title,
+      slug: p.slug,
+      category: p.category,
+      status: 'published' as const,
+      featured: p.featured ?? false,
+      badge: p.badge,
+      tier: p.tier,
+      ratingCount: p.ratingCount,
+      specs: p.specs,
+      shortDescription: p.shortDescription,
+      basePrice: p.basePrice,
+      duration: { days: p.days, nights: p.nights },
+      destination: p.destination,
+      startLocation: 'Dhaka',
+      overview: richText(p.overview),
+      info: { hotelInfo: p.hotelInfo, flightInfo: p.flightInfo, foodInfo: p.foodInfo },
+      included: p.included.map((item) => ({ item })),
+      excluded: p.excluded.map((item) => ({ item })),
+      itinerary: p.itinerary,
+      highlights: p.highlights.map((label) => ({ label })),
+      ratingAvg: 4.8,
+    }
+
+    const existing = await payload.find({
       collection: 'packages',
-      data: {
-        title: p.title,
-        slug: p.slug,
-        category: p.category,
-        status: 'published',
-        featured: p.featured ?? false,
-        shortDescription: p.shortDescription,
-        basePrice: p.basePrice,
-        duration: { days: p.days, nights: p.nights },
-        destination: p.destination,
-        startLocation: 'Dhaka',
-        overview: richText(p.overview),
-        info: {
-          hotelInfo: p.hotelInfo,
-          flightInfo: p.flightInfo,
-          foodInfo: p.foodInfo,
-        },
-        included: p.included.map((item) => ({ item })),
-        excluded: p.excluded.map((item) => ({ item })),
-        itinerary: p.itinerary,
-        highlights: p.highlights.map((label) => ({ label })),
-        ratingAvg: 4.8,
-      },
+      where: { slug: { equals: p.slug } },
+      limit: 1,
     })
 
-    for (const d of p.departures) {
-      await payload.create({
-        collection: 'departures',
-        data: {
-          package: created.id,
-          departureDate: daysFromNow(d.inDays),
-          returnDate: daysFromNow(d.inDays + d.nights),
-          price: d.price,
-          seatsTotal: d.seatsTotal,
-          seatsBooked: 0,
-          status: 'open',
-        },
-      })
+    let pkgId: number | string
+    if (existing.totalDocs > 0) {
+      const updated = await payload.update({ collection: 'packages', id: existing.docs[0].id, data })
+      pkgId = updated.id
+    } else {
+      const created = await payload.create({ collection: 'packages', data })
+      pkgId = created.id
+    }
+
+    const depCount = await payload.count({
+      collection: 'departures',
+      where: { package: { equals: pkgId } },
+    })
+    if (depCount.totalDocs === 0) {
+      for (const d of p.departures) {
+        await payload.create({
+          collection: 'departures',
+          data: {
+            package: pkgId,
+            departureDate: daysFromNow(d.inDays),
+            returnDate: daysFromNow(d.inDays + d.nights),
+            price: d.price,
+            seatsTotal: d.seatsTotal,
+            seatsBooked: 0,
+            status: 'open',
+          },
+        })
+      }
     }
   }
-  payload.logger.info(`✔ Seeded ${PACKAGES.length} packages with departures`)
+  payload.logger.info(`✔ Upserted ${PACKAGES.length} packages`)
 }

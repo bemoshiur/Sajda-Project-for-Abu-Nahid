@@ -46,6 +46,45 @@ export const Packages: CollectionConfig = {
       ],
     },
     { name: 'featured', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+    {
+      name: 'badge',
+      type: 'select',
+      defaultValue: 'none',
+      admin: { position: 'sidebar', description: 'Ribbon shown on the package card.' },
+      options: [
+        { label: 'None', value: 'none' },
+        { label: 'Top Package', value: 'top_package' },
+        { label: 'Best Seller', value: 'best_seller' },
+        { label: 'Popular', value: 'popular' },
+      ],
+    },
+    {
+      name: 'tier',
+      type: 'select',
+      defaultValue: 'standard',
+      admin: { description: 'Service tier — drives the Economy/Standard/Premium filter.' },
+      options: [
+        { label: 'Economy', value: 'economy' },
+        { label: 'Standard', value: 'standard' },
+        { label: 'Premium', value: 'premium' },
+      ],
+    },
+    {
+      name: 'ratingCount',
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      admin: { position: 'sidebar', description: 'Number of reviews shown beside the rating.' },
+    },
+    {
+      name: 'specs',
+      type: 'array',
+      admin: { description: 'Key/value spec rows shown on the package card (up to 4).' },
+      fields: [
+        { name: 'label', type: 'text' },
+        { name: 'value', type: 'text' },
+      ],
+    },
     { name: 'shortDescription', type: 'textarea' },
     { name: 'heroImage', type: 'upload', relationTo: 'media' },
     {
